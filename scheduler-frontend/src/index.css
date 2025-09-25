@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mobile app styling */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Prevent zoom on input focus on mobile */
+input[type="time"] {
+  font-size: 16px;
+}
+
+/* Smooth scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Improve button touch targets */
+button {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+/* Desktop specific styles */
+@media (min-width: 768px) {
+  .desktop-time-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+  }
+  
+  .desktop-time-slot {
+    height: 64px; /* 1 hour = 64px */
+  }
+}
+
+/* Animation for modals */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.modal-fade-in {
+  animation: fade-in 0.3s ease-out;
+}

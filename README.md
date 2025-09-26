@@ -5,7 +5,7 @@ A full-stack scheduler application that supports recurring weekly time slots wit
 ## 🚀 Live Demo
 
 - **Frontend**: [Vercel Link]
-- **Backend API**: [Render Link]
+- **Backend API**: https://smartscheduler-q1ol.onrender.com
 - **API Documentation**: [Backend URL]/health
 
 ## 📋 Features

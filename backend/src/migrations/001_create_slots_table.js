@@ -8,7 +8,7 @@ exports.up = function(knex) {
     table.string('start_time').notNullable();
     table.string('end_time').notNullable();
     table.integer('day_of_week').notNullable();
-    table.date('date').notNullable();
+    table.string('date').notNullable();
     table.boolean('is_recurring').defaultTo(false);
     table.string('exception_id').nullable();
     table.timestamps(true, true);

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import EditSlotModal from './components/EditSlotModal';
 import SlotForm from './components/SlotForm';
 import { useSlots } from './hooks/useSlots';
-import { getWeekDates, formatDate, isSameDate } from './utils/dateUtils';
+import { getWeekDates, formatDate, isSameDate, formatDateForAPI } from './utils/dateUtils';
 import type { Slot } from './types';
 
 function App() {
@@ -87,10 +87,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
     
     // Check if the date already has 2 slots
     const allSlotsForDate = weeks.flatMap(week => 
-      week.slots.filter(slot => {
-        const slotDate = new Date(slot.date).toISOString().split('T')[0];
-        return slotDate === date;
-      })
+      week.slots.filter(slot => slot.date === date)
     );
     
     if (allSlotsForDate.length >= 2) {
@@ -157,11 +154,8 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
   );
 
   const handleDateSelect = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
-    const daySlots = currentWeekData?.slots.filter(slot => {
-      const slotDate = new Date(slot.date).toISOString().split('T')[0];
-      return slotDate === dateString;
-    }) || [];
+    const dateString = formatDateForAPI(date);
+    const daySlots = currentWeekData?.slots.filter(slot => slot.date === dateString) || [];
     
     if (daySlots.length >= 2) {
       return; // Silently prevent adding more slots
@@ -209,7 +203,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
               )}
               <button 
                 onClick={() => {
-                  setSelectedDate(new Date().toISOString().split('T')[0]);
+                  setSelectedDate(formatDateForAPI(new Date()));
                   setShowDatePicker(true);
                 }}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
@@ -258,11 +252,8 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
               
               {/* Day columns */}
               {currentWeek.dates.map((date, dayIndex) => {
-                const dateString = date.toISOString().split('T')[0];
-                const daySlots = currentWeekData?.slots.filter(slot => {
-                  const slotDate = new Date(slot.date).toISOString().split('T')[0];
-                  return slotDate === dateString;
-                }) || [];
+                const dateString = formatDateForAPI(date);
+                const daySlots = currentWeekData?.slots.filter(slot => slot.date === dateString) || [];
                 
                 return (
                   <div key={dayIndex} className="relative border-r border-gray-200 last:border-r-0">
@@ -403,11 +394,8 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
             {currentWeek.dates.map((date, index) => {
               const isToday = isSameDate(date, new Date());
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-              const dateString = date.toISOString().split('T')[0];
-              const daySlots = currentWeekData?.slots.filter(slot => {
-                const slotDate = new Date(slot.date).toISOString().split('T')[0];
-                return slotDate === dateString;
-              }) || [];
+              const dateString = formatDateForAPI(date);
+              const daySlots = currentWeekData?.slots.filter(slot => slot.date === dateString) || [];
               
               return (
                 <div 
@@ -461,11 +449,8 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
               {/* Week Days */}
               {getWeekDates(new Date(week.startDate)).dates.map((date, dayIndex) => {
                 const isToday = isSameDate(date, new Date());
-                const dateString = date.toISOString().split('T')[0];
-                const daySlots = week.slots.filter(slot => {
-                  const slotDate = new Date(slot.date).toISOString().split('T')[0];
-                  return slotDate === dateString;
-                }) || [];
+                const dateString = formatDateForAPI(date);
+                const daySlots = week.slots.filter(slot => slot.date === dateString) || [];
                 
                 return (
                   <div key={`${week.startDate}-${dayIndex}`} className="border-b border-gray-100 last:border-b-0">
@@ -554,7 +539,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
         {/* Floating Action Button */}
         <button
           onClick={() => {
-            setSelectedDate(new Date().toISOString().split('T')[0]);
+            setSelectedDate(formatDateForAPI(new Date()));
             setShowDatePicker(true);
           }}
           className="fixed bottom-20 right-4 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center z-40"
@@ -571,7 +556,6 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
     <div className="min-h-screen bg-gray-100">
       <div className={`${viewMode === 'mobile' ? 'max-w-md mx-auto' : ''} bg-white h-screen flex flex-col`}>
         {viewMode === 'desktop' ? renderDesktopView() : renderMobileView()}
-
 
         {/* Combined Add Slot Modal */}
         {showDatePicker && (
@@ -597,17 +581,14 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
                   <label className="block text-sm font-medium text-gray-700 mb-2">Choose Date</label>
                   <input
                     type="date"
-                    value={selectedDate || new Date().toISOString().split('T')[0]}
+                    value={selectedDate || formatDateForAPI(new Date())}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={formatDateForAPI(new Date())}
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   {selectedDate && (() => {
                     const allSlotsForDate = weeks.flatMap(week => 
-                      week.slots.filter(slot => {
-                        const slotDate = new Date(slot.date).toISOString().split('T')[0];
-                        return slotDate === selectedDate;
-                      })
+                      week.slots.filter(slot => slot.date === selectedDate)
                     );
                     const slotCount = allSlotsForDate.length;
                     return (
@@ -620,10 +601,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
                 
                 {selectedDate && (() => {
                   const allSlotsForDate = weeks.flatMap(week => 
-                    week.slots.filter(slot => {
-                      const slotDate = new Date(slot.date).toISOString().split('T')[0];
-                      return slotDate === selectedDate;
-                    })
+                    week.slots.filter(slot => slot.date === selectedDate)
                   );
                   if (allSlotsForDate.length >= 2) {
                     return (

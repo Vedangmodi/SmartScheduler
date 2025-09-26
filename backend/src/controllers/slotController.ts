@@ -34,7 +34,7 @@ export class SlotController {
   }
 
   // Create a new slot
- static async createSlot(req: Request, res: Response) {
+static async createSlot(req: Request, res: Response) {
     try {
       console.log('📦 Request body received:', req.body);
       
@@ -55,10 +55,10 @@ export class SlotController {
         });
       }
 
-      // ✅ FIX: Use UTC date to avoid timezone issues
+      // Use the date as provided by frontend (YYYY-MM-DD format)
       const dateString = date.split('T')[0]; // Remove time part if present
 
-      // Validate the date format and create UTC date
+      // Validate the date format
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(dateString)) {
         return res.status(400).json({
@@ -67,15 +67,13 @@ export class SlotController {
         });
       }
 
-      // ✅ FIX: Create UTC date for correct day calculation
-      const utcDate = new Date(dateString + 'T00:00:00Z');
-      const calculatedDayOfWeek = utcDate.getUTCDay();
+      // ✅ FIX: Simple date validation without UTC complications
+      const [year, month, day] = dateString.split('-').map(Number);
+      const inputDate = new Date(year, month - 1, day);
+      const calculatedDayOfWeek = inputDate.getDay();
 
-      // ✅ FIX: Validate that the provided day_of_week matches the calculated day
-      if (parseInt(day_of_week) !== calculatedDayOfWeek) {
-        console.log(`Warning: Provided day ${day_of_week} doesn't match calculated day ${calculatedDayOfWeek} for date ${dateString}`);
-        // Still proceed, but use the calculated day to ensure consistency
-      }
+      // Log for debugging
+      console.log(`Input date: ${dateString}, Calculated day: ${calculatedDayOfWeek}, Provided day: ${day_of_week}`);
 
       // Validate time format and logic
       if (start_time >= end_time) {
@@ -96,10 +94,11 @@ export class SlotController {
         });
       }
 
+      const normalizedDayOfWeek = typeof day_of_week === 'number' ? day_of_week : parseInt(day_of_week, 10);
       const slotData: CreateSlotData = {
         start_time,
         end_time,
-        day_of_week: parseInt(day_of_week),
+        day_of_week: normalizedDayOfWeek,
         date: dateString,
         is_recurring: Boolean(is_recurring)
       };
@@ -237,34 +236,53 @@ export class SlotController {
   }
 
   // ✅ FIX: Helper method to create recurring slots with CORRECT day of week
-  private static async createRecurringSlots(originalSlot: any) {
+ private static async createRecurringSlots(originalSlot: any) {
   try {
-    // ✅ FIX: Use UTC date to avoid timezone issues
-    const originalDate = new Date(originalSlot.date + 'T00:00:00Z'); // Use UTC
-    const targetDayOfWeek = originalSlot.day_of_week;
+    // Normalize date to YYYY-MM-DD string regardless of whether it's a Date or string
+    const normalizeToYmd = (value: string | Date): string => {
+      if (value instanceof Date) {
+        const y = value.getFullYear();
+        const m = String(value.getMonth() + 1).padStart(2, '0');
+        const d = String(value.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+      // value is string; could be YYYY-MM-DD or ISO
+      const isoParts = value.split('T');
+      if (isoParts.length > 1) return isoParts[0];
+      return value;
+    };
+
+    const originalDateString = normalizeToYmd(originalSlot.date);
+    console.log(`Creating recurring slots for day ${originalSlot.day_of_week} starting from ${originalDateString}`);
     
-    console.log(`Creating recurring slots for day ${targetDayOfWeek} starting from ${originalSlot.date}`);
-    console.log(`Original UTC date: ${originalDate.toISOString()}`);
+    // ✅ FIX: Simple date parsing without timezone issues
+    const [year, month, day] = originalDateString.split('-').map(Number);
+    const originalDate = new Date(year, month - 1, day);
+    
+    console.log(`Parsed original date: ${originalDate.toString()}`);
     
     // Create slots for the next 12 weeks
     for (let week = 1; week <= 12; week++) {
-      // ✅ FIX: Calculate date correctly using UTC
+      // ✅ FIX: Simple date calculation without UTC complications
       const futureDate = new Date(originalDate);
-      futureDate.setUTCDate(originalDate.getUTCDate() + (week * 7));
+      futureDate.setDate(originalDate.getDate() + (week * 7));
       
-      // ✅ FIX: Ensure we get the exact same day of week
-      const futureDayOfWeek = futureDate.getUTCDay();
+      // ✅ FIX: Ensure same day of week
+      const futureDayOfWeek = futureDate.getDay();
+      const targetDayOfWeek = originalSlot.day_of_week;
       
-      // Adjust if the day doesn't match
       if (futureDayOfWeek !== targetDayOfWeek) {
         const dayDifference = targetDayOfWeek - futureDayOfWeek;
-        futureDate.setUTCDate(futureDate.getUTCDate() + dayDifference);
+        futureDate.setDate(futureDate.getDate() + dayDifference);
       }
       
-      const futureDateString = futureDate.toISOString().split('T')[0];
-      const calculatedDay = futureDate.getUTCDay();
+      // ✅ FIX: Simple date formatting
+      const futureYear = futureDate.getFullYear();
+      const futureMonth = String(futureDate.getMonth() + 1).padStart(2, '0');
+      const futureDay = String(futureDate.getDate()).padStart(2, '0');
+      const futureDateString = `${futureYear}-${futureMonth}-${futureDay}`;
       
-      console.log(`Week ${week}: Creating slot for ${futureDateString} (day ${calculatedDay})`);
+      console.log(`Week ${week}: Creating slot for ${futureDateString} (day ${futureDate.getDay()})`);
       
       // Check if this future date already has 2 slots
       const existingCount = await SlotModel.countByDate(futureDateString);
@@ -276,7 +294,7 @@ export class SlotController {
       const futureSlotData: CreateSlotData = {
         start_time: originalSlot.start_time,
         end_time: originalSlot.end_time,
-        day_of_week: calculatedDay, // Use the calculated day
+        day_of_week: futureDate.getDay(), // Use the actual day
         date: futureDateString,
         is_recurring: true
       };

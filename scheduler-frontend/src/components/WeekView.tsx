@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Slot } from '../types';
-import { formatTime, getDayName, formatDate } from '../utils/dateUtils';
+import { formatTime, getDayName, formatDate, formatDateForAPI } from '../utils/dateUtils';
 import SlotForm from './SlotForm';
 
 interface DayColumnProps {
@@ -18,7 +18,7 @@ const DayColumn: React.FC<DayColumnProps> = ({ date, slots, onAddSlot, onEditSlo
     if (slots.length >= 2) {
       return; // Silently prevent adding more slots
     }
-    onAddSlot(date.toISOString().split('T')[0], startTime, endTime, isRecurring);
+    onAddSlot(formatDateForAPI(date), startTime, endTime, isRecurring);
     setShowForm(false);
   };
   
@@ -101,7 +101,7 @@ interface WeekViewProps {
 const WeekView: React.FC<WeekViewProps> = ({ week, onAddSlot, onEditSlot, onDeleteSlot }) => {
   // Group slots by date
   const slotsByDate = week.slots.reduce((acc, slot) => {
-    const slotDate = new Date(slot.date).toISOString().split('T')[0];
+    const slotDate = slot.date; // already YYYY-MM-DD from API
     if (!acc[slotDate]) {
       acc[slotDate] = [];
     }
@@ -116,7 +116,7 @@ const WeekView: React.FC<WeekViewProps> = ({ week, onAddSlot, onEditSlot, onDele
           <DayColumn
             key={date.toISOString()}
             date={date}
-            slots={slotsByDate[date.toISOString().split('T')[0]] || []}
+            slots={slotsByDate[formatDateForAPI(date)] || []}
             onAddSlot={onAddSlot}
             onEditSlot={onEditSlot}
             onDeleteSlot={onDeleteSlot}

@@ -1,20 +1,19 @@
-// ✅ FIX: Proper UTC date handling to avoid timezone issues
+// ✅ FIX: Simple date handling without timezone complications
 export const getWeekDates = (date: Date): { startDate: string; endDate: string; dates: Date[] } => {
-  // Use UTC to avoid timezone shifts
-  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const day = utcDate.getUTCDay();
-  const diff = utcDate.getUTCDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+  const localDate = new Date(date);
+  const day = localDate.getDay();
+  const diff = localDate.getDate() - day + (day === 0 ? -6 : 1);
   
-  const startDate = new Date(utcDate);
-  startDate.setUTCDate(diff);
+  const startDate = new Date(localDate);
+  startDate.setDate(diff);
   
   const endDate = new Date(startDate);
-  endDate.setUTCDate(startDate.getUTCDate() + 6);
+  endDate.setDate(startDate.getDate() + 6);
   
   const dates = [];
   for (let i = 0; i < 7; i++) {
     const currentDate = new Date(startDate);
-    currentDate.setUTCDate(startDate.getUTCDate() + i);
+    currentDate.setDate(startDate.getDate() + i);
     dates.push(currentDate);
   }
   
@@ -25,18 +24,18 @@ export const getWeekDates = (date: Date): { startDate: string; endDate: string; 
   };
 };
 
-// ✅ FIX: Format date for API (YYYY-MM-DD)
+// Simple date formatting
 export const formatDateForAPI = (date: Date): string => {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-// ✅ FIX: Parse date string without timezone issues
+// Simple date parsing
 export const parseDateString = (dateString: string): Date => {
   const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
+  return new Date(year, month - 1, day);
 };
 
 export const formatTime = (timeString: string): string => {
@@ -58,16 +57,12 @@ export const formatDate = (date: Date): string => {
   });
 };
 
-// ✅ FIX: Check if same date using UTC
 export const isSameDate = (date1: Date, date2: Date): boolean => {
-  return date1.getUTCFullYear() === date2.getUTCFullYear() &&
-         date1.getUTCMonth() === date2.getUTCMonth() &&
-         date1.getUTCDate() === date2.getUTCDate();
+  return date1.toDateString() === date2.toDateString();
 };
 
-// ✅ FIX: Get correct UTC day of week
 export const getDayOfWeek = (date: Date): number => {
-  return date.getUTCDay();
+  return date.getDay();
 };
 
 export const getTimePosition = (timeString: string): number => {

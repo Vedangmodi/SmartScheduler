@@ -31,10 +31,16 @@ export class SlotModel {
   static async create(slotData: CreateSlotData): Promise<Slot> {
     const id = `slot_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    // Ensure date is in YYYY-MM-DD format
+    const normalizedSlotData = {
+      ...slotData,
+      date: slotData.date.split('T')[0] // Remove time part if present
+    };
+    
     const [slot] = await db('slots')
       .insert({
         id,
-        ...slotData
+        ...normalizedSlotData
       })
       .returning('*');
     

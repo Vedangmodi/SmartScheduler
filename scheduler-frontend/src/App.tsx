@@ -7,6 +7,7 @@ import type { Slot } from './types';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const todayLocal = parseDateString(formatDateForAPI(new Date()));
   const [editingSlot, setEditingSlot] = useState<Slot | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
@@ -221,7 +222,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
             <div className="grid grid-cols-8 border-b border-gray-200">
               <div className="p-4 font-medium text-gray-500">Time</div>
               {currentWeek.dates.map((date, index) => {
-                const isToday = isSameDate(date, new Date());
+                const isToday = isSameDate(date, todayLocal);
                 return (
                   <div key={index} className="p-4 text-center">
                     <div className={`text-sm font-medium ${isToday ? 'text-purple-600' : 'text-gray-800'}`}>
@@ -392,7 +393,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
           {/* Dates */}
           <div className="flex justify-between">
             {currentWeek.dates.map((date, index) => {
-              const isToday = isSameDate(date, new Date());
+              const isToday = isSameDate(date, todayLocal);
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               const dateString = formatDateForAPI(date);
               const daySlots = currentWeekData?.slots.filter(slot => slot.date === dateString) || [];
@@ -448,7 +449,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
               
               {/* Week Days */}
               {getWeekDates(parseDateString(week.startDate)).dates.map((date, dayIndex) => {
-                const isToday = isSameDate(date, new Date());
+                const isToday = isSameDate(date, todayLocal);
                 const dateString = formatDateForAPI(date);
                 const daySlots = week.slots.filter(slot => slot.date === dateString) || [];
                 

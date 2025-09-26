@@ -1,3 +1,7 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
 exports.up = function(knex) {
   return knex.schema.createTable('slots', (table) => {
     table.string('id').primary();
@@ -17,4 +21,12 @@ exports.up = function(knex) {
     table.index(['day_of_week', 'is_recurring']);
     table.index(['exception_id']);
   });
+};
+
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.down = function(knex) {
+  return knex.schema.dropTable('slots');
 };

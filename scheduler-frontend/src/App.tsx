@@ -82,7 +82,7 @@ function App() {
 const handleAddSlot = async (date: string, startTime: string, endTime: string, isRecurring: boolean) => {
   try {
     // ✅ FIX: Use correct date and day_of_week
-    const slotDate = new Date(date);
+    const slotDate = parseDateString(date);
     const dayOfWeek = slotDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
     
     // Check if the date already has 2 slots

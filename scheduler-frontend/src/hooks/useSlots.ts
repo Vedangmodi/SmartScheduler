@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { Slot, WeekData } from '../types';
 import { api } from '../services/api';
-import { getWeekDates, formatDateForAPI, getDayOfWeek } from '../utils/dateUtils';
+import { getWeekDates, formatDateForAPI, getDayOfWeek, parseDateString } from '../utils/dateUtils';
 
 export const useSlots = () => {
   const [weeks, setWeeks] = useState<WeekData[]>([]);
@@ -38,7 +38,7 @@ export const useSlots = () => {
     try {
       setError(null);
       
-      const slotDate = new Date(slotData.date);
+      const slotDate = parseDateString(slotData.date);
       const correctedSlotData = {
         ...slotData,
         date: formatDateForAPI(slotDate),

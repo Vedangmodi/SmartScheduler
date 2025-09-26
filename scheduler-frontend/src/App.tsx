@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import EditSlotModal from './components/EditSlotModal';
 import SlotForm from './components/SlotForm';
 import { useSlots } from './hooks/useSlots';
-import { getWeekDates, formatDate, isSameDate, formatDateForAPI } from './utils/dateUtils';
+import { getWeekDates, formatDate, isSameDate, formatDateForAPI, parseDateString } from './utils/dateUtils';
 import type { Slot } from './types';
 
 function App() {
@@ -435,10 +435,10 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
               {/* Week Header */}
               <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-2 z-10">
                 <div className="text-sm font-semibold text-gray-600">
-                  Week of {new Date(week.startDate).toLocaleDateString('en-US', { 
+                  Week of {parseDateString(week.startDate).toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: 'numeric' 
-                  })} - {new Date(week.endDate).toLocaleDateString('en-US', { 
+                  })} - {parseDateString(week.endDate).toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: 'numeric',
                     year: 'numeric'
@@ -447,7 +447,7 @@ const handleAddSlot = async (date: string, startTime: string, endTime: string, i
               </div>
               
               {/* Week Days */}
-              {getWeekDates(new Date(week.startDate)).dates.map((date, dayIndex) => {
+              {getWeekDates(parseDateString(week.startDate)).dates.map((date, dayIndex) => {
                 const isToday = isSameDate(date, new Date());
                 const dateString = formatDateForAPI(date);
                 const daySlots = week.slots.filter(slot => slot.date === dateString) || [];

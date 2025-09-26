@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Slot } from '../types';
-import { formatTime, getDayName, formatDate, formatDateForAPI } from '../utils/dateUtils';
+import { formatTime, getDayName, formatDate, formatDateForAPI, parseDateString } from '../utils/dateUtils';
 import SlotForm from './SlotForm';
 
 interface DayColumnProps {
@@ -114,7 +114,7 @@ const WeekView: React.FC<WeekViewProps> = ({ week, onAddSlot, onEditSlot, onDele
       <div className="flex">
         {week.dates.map(date => (
           <DayColumn
-            key={date.toISOString()}
+            key={formatDateForAPI(date)}
             date={date}
             slots={slotsByDate[formatDateForAPI(date)] || []}
             onAddSlot={onAddSlot}

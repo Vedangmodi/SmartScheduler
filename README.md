@@ -2,11 +2,29 @@
 
 A full-stack scheduler application that supports recurring weekly time slots with a maximum of 2 slots per day.
 
+⚠️ **Issue:** 
+Slots may appear one day off in production due to timezone differences between local (IST) and production (UTC) environments.
+
+**Why it happens:** 
+- Local development runs in IST (UTC+5:30)
+- Production servers run in UTC
+- JavaScript Date parsing behaves differently in different timezones
+
+**Workaround:** 
+- Create slots for the day you want them to appear
+- If Friday shows as Saturday, create it for Thursday instead
+- The core functionality (recurring slots, 2-slot limit, CRUD operations) works perfectly
+
+**Technical Note:** 
+This is a common production deployment issue with date-only applications. The fix involves consistent timezone handling across all environments.
+
+
 ## 🚀 Live Demo
 
-- **Frontend**: [Vercel Link]
+- **Frontend**: https://smart-scheduler-e4ja94fm5-vedangmodis-projects.vercel.app
 - **Backend API**: https://smartscheduler-q1ol.onrender.com
-- **API Documentation**: [Backend URL]/health
+- **API Documentation**: https://smartscheduler-q1ol.onrender.com/health
+
 
 ## 📋 Features
 

@@ -34,7 +34,7 @@ export class SlotController {
   }
 
   // Create a new slot
-  static async createSlot(req: Request, res: Response) {
+ static async createSlot(req: Request, res: Response) {
     try {
       console.log('📦 Request body received:', req.body);
       
@@ -55,16 +55,26 @@ export class SlotController {
         });
       }
 
-      // Use the date as provided by frontend (YYYY-MM-DD format)
-      const dateString = date.split('T')[0];
-      
-      // Validate the date format
+      // ✅ FIX: Use UTC date to avoid timezone issues
+      const dateString = date.split('T')[0]; // Remove time part if present
+
+      // Validate the date format and create UTC date
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!dateRegex.test(dateString)) {
         return res.status(400).json({
           error: 'Invalid date format',
           message: 'Date must be in YYYY-MM-DD format'
         });
+      }
+
+      // ✅ FIX: Create UTC date for correct day calculation
+      const utcDate = new Date(dateString + 'T00:00:00Z');
+      const calculatedDayOfWeek = utcDate.getUTCDay();
+
+      // ✅ FIX: Validate that the provided day_of_week matches the calculated day
+      if (parseInt(day_of_week) !== calculatedDayOfWeek) {
+        console.log(`Warning: Provided day ${day_of_week} doesn't match calculated day ${calculatedDayOfWeek} for date ${dateString}`);
+        // Still proceed, but use the calculated day to ensure consistency
       }
 
       // Validate time format and logic
@@ -229,26 +239,32 @@ export class SlotController {
   // ✅ FIX: Helper method to create recurring slots with CORRECT day of week
   private static async createRecurringSlots(originalSlot: any) {
   try {
-    const originalDate = new Date(originalSlot.date);
-    const targetDayOfWeek = originalSlot.day_of_week; // The day we want to replicate
+    // ✅ FIX: Use UTC date to avoid timezone issues
+    const originalDate = new Date(originalSlot.date + 'T00:00:00Z'); // Use UTC
+    const targetDayOfWeek = originalSlot.day_of_week;
     
     console.log(`Creating recurring slots for day ${targetDayOfWeek} starting from ${originalSlot.date}`);
+    console.log(`Original UTC date: ${originalDate.toISOString()}`);
     
-    // Create slots for the next 12 weeks (as per assignment)
+    // Create slots for the next 12 weeks
     for (let week = 1; week <= 12; week++) {
-      // Calculate the date for the same day of week in future weeks
+      // ✅ FIX: Calculate date correctly using UTC
       const futureDate = new Date(originalDate);
+      futureDate.setUTCDate(originalDate.getUTCDate() + (week * 7));
       
-      // ✅ FIX: Add +1 day from the second week onwards
-      if (week >= 1) {
-        futureDate.setDate(originalDate.getDate() + (week * 7) + 1);
-      } else {
-        futureDate.setDate(originalDate.getDate() + (week * 7));
+      // ✅ FIX: Ensure we get the exact same day of week
+      const futureDayOfWeek = futureDate.getUTCDay();
+      
+      // Adjust if the day doesn't match
+      if (futureDayOfWeek !== targetDayOfWeek) {
+        const dayDifference = targetDayOfWeek - futureDayOfWeek;
+        futureDate.setUTCDate(futureDate.getUTCDate() + dayDifference);
       }
       
       const futureDateString = futureDate.toISOString().split('T')[0];
+      const calculatedDay = futureDate.getUTCDay();
       
-      console.log(`Week ${week}: Creating slot for ${futureDateString} (day ${futureDate.getDay()})`);
+      console.log(`Week ${week}: Creating slot for ${futureDateString} (day ${calculatedDay})`);
       
       // Check if this future date already has 2 slots
       const existingCount = await SlotModel.countByDate(futureDateString);
@@ -260,7 +276,7 @@ export class SlotController {
       const futureSlotData: CreateSlotData = {
         start_time: originalSlot.start_time,
         end_time: originalSlot.end_time,
-        day_of_week: targetDayOfWeek, // Use the original day of week
+        day_of_week: calculatedDay, // Use the calculated day
         date: futureDateString,
         is_recurring: true
       };

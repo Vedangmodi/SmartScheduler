@@ -255,19 +255,20 @@ static async createSlot(req: Request, res: Response) {
     const originalDateString = normalizeToYmd(originalSlot.date);
     console.log(`Creating recurring slots for day ${originalSlot.day_of_week} starting from ${originalDateString}`);
     
-    // ✅ FIX: Simple date parsing without timezone issues
+    // ✅ FIX: Parse date components directly to avoid timezone issues
     const [year, month, day] = originalDateString.split('-').map(Number);
-    const originalDate = new Date(year, month - 1, day);
-    
-    console.log(`Parsed original date: ${originalDate.toString()}`);
     
     // Create slots for the next 12 weeks
     for (let week = 1; week <= 12; week++) {
-      // ✅ FIX: Simple date calculation without UTC complications
-      const futureDate = new Date(originalDate);
-      futureDate.setDate(originalDate.getDate() + (week * 7));
+      // ✅ FIX: Calculate future date using component arithmetic
+      const futureYear = year;
+      const futureMonth = month;
+      const futureDay = day + (week * 7);
       
-      // ✅ FIX: Ensure same day of week
+      // Create date using components to avoid timezone issues
+      const futureDate = new Date(futureYear, futureMonth - 1, futureDay);
+      
+      // ✅ FIX: Ensure same day of week using target day_of_week
       const futureDayOfWeek = futureDate.getDay();
       const targetDayOfWeek = originalSlot.day_of_week;
       
@@ -276,11 +277,11 @@ static async createSlot(req: Request, res: Response) {
         futureDate.setDate(futureDate.getDate() + dayDifference);
       }
       
-      // ✅ FIX: Simple date formatting
-      const futureYear = futureDate.getFullYear();
-      const futureMonth = String(futureDate.getMonth() + 1).padStart(2, '0');
-      const futureDay = String(futureDate.getDate()).padStart(2, '0');
-      const futureDateString = `${futureYear}-${futureMonth}-${futureDay}`;
+      // ✅ FIX: Format using local components
+      const finalYear = futureDate.getFullYear();
+      const finalMonth = String(futureDate.getMonth() + 1).padStart(2, '0');
+      const finalDay = String(futureDate.getDate()).padStart(2, '0');
+      const futureDateString = `${finalYear}-${finalMonth}-${finalDay}`;
       
       console.log(`Week ${week}: Creating slot for ${futureDateString} (day ${futureDate.getDay()})`);
       
@@ -294,7 +295,7 @@ static async createSlot(req: Request, res: Response) {
       const futureSlotData: CreateSlotData = {
         start_time: originalSlot.start_time,
         end_time: originalSlot.end_time,
-        day_of_week: futureDate.getDay(), // Use the actual day
+        day_of_week: originalSlot.day_of_week, // Use original day_of_week, not calculated
         date: futureDateString,
         is_recurring: true
       };
